@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import { SignIn, useUser } from "@clerk/nextjs";
@@ -57,8 +58,23 @@ function Feed() {
 
 function CreatePostWizard() {
   const { user } = useUser();
+  const [input, setInput] = useState("");
+  const ctx = api.useContext();
 
   if (!user) return null;
+
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void ctx.posts.getAll.invalidate();
+    },
+  });
+
+  const handleSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && input) {
+      mutate({ content: input });
+    }
+  };
 
   return (
     <div className="relative flex w-full gap-3">
@@ -72,6 +88,11 @@ function CreatePostWizard() {
       <input
         placeholder="Type some emojis"
         className="grow bg-transparent outline-none"
+        type="text"
+        onKeyDown={(e) => handleSubmit(e)}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isPosting}
       />
     </div>
   );
