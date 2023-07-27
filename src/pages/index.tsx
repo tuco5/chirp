@@ -5,16 +5,15 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { api } from "@/utils/api";
 import type { RouterOutputs } from "@/utils/api";
+import LoadingPage from "@/components/loading";
 
 dayjs.extend(relativeTime);
 
 export default function Home() {
-  const user = useUser();
-  const { data, isLoading } = api.posts.getAll.useQuery();
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
 
-  if (isLoading) return <div>Loading...</div>;
-
-  if (!data) return <div>Something went wrong</div>;
+  // Return empty div if user isnt' loaded yet
+  if (!userLoaded) return <div />;
 
   return (
     <>
@@ -24,23 +23,35 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen justify-center">
-        <div className="w-full border-x border-slate-400 md:max-w-2xl">
+        <div className="relative w-full border-x border-slate-400 md:max-w-2xl">
           <div className="flex border-b border-slate-400 p-4">
-            {!user.isSignedIn && (
+            {!isSignedIn && (
               <div className="flex justify-center">
                 <SignIn />
               </div>
             )}
-            {user.isSignedIn && <CreatePostWizard />}
+            {isSignedIn && <CreatePostWizard />}
           </div>
-          <div className="flex flex-col">
-            {data?.map(({ post, author }) => (
-              <PostView key={post.id} post={post} author={author} />
-            ))}
-          </div>
+          <Feed />
         </div>
       </main>
     </>
+  );
+}
+
+function Feed() {
+  const { data, isLoading } = api.posts.getAll.useQuery();
+
+  if (isLoading) return <LoadingPage />;
+
+  if (!data) return <div>Something went wrong</div>;
+
+  return (
+    <div className="flex flex-col">
+      {data?.map(({ post, author }) => (
+        <PostView key={post.id} post={post} author={author} />
+      ))}
+    </div>
   );
 }
 
@@ -83,7 +94,7 @@ function PostView(props: PostWithUser) {
           <span>·</span>
           <span className="font-thin">{dayjs(post.createdAt).fromNow()}</span>
         </div>
-        <span>{post.content}</span>
+        <span className="text-2xl">{post.content}</span>
       </div>
     </div>
   );
