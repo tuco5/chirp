@@ -6,7 +6,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { api } from "@/utils/api";
 import type { RouterOutputs } from "@/utils/api";
-import LoadingPage from "@/components/loading";
+import LoadingPage, { LoadingSpinner } from "@/components/loading";
+import toast from "react-hot-toast";
 
 dayjs.extend(relativeTime);
 
@@ -65,8 +66,17 @@ function CreatePostWizard() {
 
   const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
     onSuccess: () => {
-      setInput("");
       void ctx.posts.getAll.invalidate();
+    },
+    onError: (err) => {
+      const errorMessage = err.data?.zodError?.fieldErrors.content;
+      console.log("error message", errorMessage);
+      if (errorMessage?.[0]) {
+        toast.error(errorMessage[0]);
+      }
+    },
+    onMutate: () => {
+      setInput("");
     },
   });
 
@@ -94,6 +104,7 @@ function CreatePostWizard() {
         onChange={(e) => setInput(e.target.value)}
         disabled={isPosting}
       />
+      {isPosting && <LoadingSpinner />}
     </div>
   );
 }
