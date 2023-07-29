@@ -1,6 +1,14 @@
 import { api } from "@/utils/api";
 import Head from "next/head";
 import Image from "next/image";
+import type {
+  InferGetServerSidePropsType,
+  GetServerSidePropsContext,
+} from "next/types";
+import PageLayout from "@/components/layout";
+import LoadingPage from "@/components/loading";
+import PostView from "@/components/postview";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
 
 function ProfileFeed({ userId }: { userId: string }) {
   const { data, isLoading } = api.posts.getPostsByUserId.useQuery({ userId });
@@ -51,26 +59,10 @@ export default function ProfilePage({
   );
 }
 
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "@/server/api/root";
-import { prisma } from "@/server/db";
-import SuperJSON from "superjson";
-import type {
-  InferGetServerSidePropsType,
-  GetServerSidePropsContext,
-} from "next/types";
-import PageLayout from "@/components/layout";
-import LoadingPage from "@/components/loading";
-import PostView from "@/components/postview";
-
 export async function getStaticProps(
   context: GetServerSidePropsContext<{ slug: string }>
 ) {
-  const helpers = createServerSideHelpers({
-    router: appRouter,
-    ctx: { prisma, userId: null },
-    transformer: SuperJSON,
-  });
+  const helpers = generateSSGHelper();
 
   const slug = context.params?.slug;
 
