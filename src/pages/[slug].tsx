@@ -2,6 +2,22 @@ import { api } from "@/utils/api";
 import Head from "next/head";
 import Image from "next/image";
 
+function ProfileFeed({ userId }: { userId: string }) {
+  const { data, isLoading } = api.posts.getPostsByUserId.useQuery({ userId });
+
+  if (isLoading) return <LoadingPage />;
+
+  if (!data || data.length === 0) return <div>User has not posted</div>;
+
+  return (
+    <div className="flex flex-col">
+      {data?.map((fullPost) => (
+        <PostView key={fullPost.post.id} {...fullPost} />
+      ))}
+    </div>
+  );
+}
+
 export default function ProfilePage({
   username,
 }: InferGetServerSidePropsType<typeof getStaticProps>) {
@@ -29,6 +45,7 @@ export default function ProfilePage({
         <div className="w-full border-b border-slate-400">
           <div className="p-4 text-2xl font-bold">@{data.username}</div>
         </div>
+        <ProfileFeed userId={data.id} />
       </PageLayout>
     </>
   );
@@ -43,6 +60,8 @@ import type {
   GetServerSidePropsContext,
 } from "next/types";
 import PageLayout from "@/components/layout";
+import LoadingPage from "@/components/loading";
+import PostView from "@/components/postview";
 
 export async function getStaticProps(
   context: GetServerSidePropsContext<{ slug: string }>
