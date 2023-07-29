@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
-import { SignIn, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { api } from "@/utils/api";
@@ -22,7 +22,7 @@ export default function Home() {
       <div className="flex border-b border-slate-400 p-4">
         {!isSignedIn && (
           <div className="flex justify-center">
-            <SignIn />
+            <SignInButton />
           </div>
         )}
         {isSignedIn && <CreatePostWizard />}

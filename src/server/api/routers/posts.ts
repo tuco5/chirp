@@ -12,9 +12,11 @@ import filterUserForClient from "@/server/helpers/filterUserForClient";
 import type { Post } from "@prisma/client";
 
 async function addUserDataToPosts(posts: Post[]) {
+  const userId = posts.map((post) => post.authorId);
+
   const users = (
     await clerkClient.users.getUserList({
-      userId: posts.map((post) => post.authorId),
+      userId,
       limit: 100,
     })
   ).map(filterUserForClient);
@@ -22,13 +24,20 @@ async function addUserDataToPosts(posts: Post[]) {
   return posts.map((post) => {
     const author = users.find((user) => user.id === post.authorId);
 
-    if (!author)
+    if (!author?.username) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Author for post not found",
+        message: `Author for post not found. POST ID: ${post.id}, USER ID: ${post.authorId}`,
       });
+    }
 
-    return { post, author };
+    return {
+      post,
+      author: {
+        ...author,
+        username: author.username,
+      },
+    };
   });
 }
 
